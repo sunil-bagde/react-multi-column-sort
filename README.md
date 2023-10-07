@@ -1,3 +1,4 @@
+```jsx
 const useSort = () => {
   const [sortConfig, updateSortConfig] = useState([]);
 
@@ -39,3 +40,4 @@ const useSort = () => {
   );
   return [sortConfig, updateSortConfig, sortColumn];
 };
+```
