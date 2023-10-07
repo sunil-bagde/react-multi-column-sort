@@ -1,3 +1,17 @@
+## Quick Overview
+
+```sh
+ 
+cd react-multi-column-sort
+yarn install # same for npm 
+```
+
+
+### `yarn dev` `npm run dev` 
+
+Runs the app in development mode.<br>
+Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+
 ```jsx
 const useSort = () => {
   const [sortConfig, updateSortConfig] = useState([]);
