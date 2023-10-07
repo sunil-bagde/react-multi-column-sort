@@ -1,39 +1,23 @@
-import { faker } from "@faker-js/faker";
+
 import sortBy from "sort-by";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { useSearchParams } from "react-router-dom";
 import { useCallback } from "react";
-faker.seed(12);
+
+import {peopleSeed} from "./seeds/user.seed"
 
 const tableColumn = [
-  { label: "Name", property: "name" },
-  { label: "Title", property: "title" },
-  { label: "Email", property: "email" },
-  { label: "Role", property: "role" },
+  { id:1,label: "Name", property: "name" },
+  { id:2,label: "Title", property: "title" },
+  { id:3,label: "Email", property: "email" },
+  { id:4,label: "Role", property: "role" },
 ];
 
-const createUser = () => {
-  const firstName = faker.person.firstName();
-  const lastName = faker.person.lastName();
-  const name = `${firstName} ${lastName}`;
-  const email = faker.internet.email({ firstName, lastName }).toLowerCase();
 
-  return {
-    name,
-    title: faker.person.jobTitle(),
-    email,
-    role: faker.person.jobType(),
-  };
-};
-const createUsers = (numUsers = 12) => {
-  return Array.from({ length: numUsers }, createUser);
-};
-
-const people = createUsers();
 
 enum SortingType {
-  Ascending,
-  Descending,
+  Ascending = "asc",
+  Descending = "desc",
 }
 const getSortDirection = (property, sortConfig) => {
   const findDesc = sortConfig.find((config) => config === `-${property}`);
@@ -52,31 +36,33 @@ export default function Index() {
 
   const sortParam = searchParams.getAll("sort");
 
+  const splitParam = (currentSortType, by = ":") =>
+    currentSortType.split(by) ?? [];
+
   const handleSort = useCallback(
     (propertyName) => {
-      let pendingChange = sortParam.length > 0 ? sortParam : [];
-      const index = pendingChange?.findIndex((config) =>
+      let sortConfig = sortParam.length > 0 ? sortParam : [];
+      const index = sortConfig?.findIndex((config) =>
         config.startsWith(propertyName),
       );
 
       if (index > -1) {
-        //Save the sortType
-        const currentSortType = pendingChange[index];
-        const [propName, direction] = currentSortType.split(":") ?? [];
-        //Remove existing config
-        pendingChange.splice(index, 1);
-        //check if the sort type we saved is Ascending
-        if (propName && !direction) {
-          pendingChange = [
-            ...pendingChange,
-            `${propertyName}:${SortingType.Descending}`,
-          ];
-        }
+        const currentSortType = sortConfig[index];
+        const [propName, direction] = splitParam(currentSortType);
+        sortConfig.splice(index, 1);
+
+        propName && !direction
+          ? (sortConfig = [
+              ...sortConfig,
+              `${propertyName}:${SortingType.Descending}`,
+            ])
+          : [];
       } else {
-        pendingChange = [...pendingChange, `${propertyName}`];
+        sortConfig = [...sortConfig, `${propertyName}`];
       }
       const newSearchParams = new URLSearchParams({});
-      pendingChange.forEach((key) => {
+
+      sortConfig.forEach((key) => {
         newSearchParams.append("sort", key);
       });
       setSearchParams(newSearchParams);
@@ -84,10 +70,10 @@ export default function Index() {
     [sortParam, setSearchParams],
   );
 
-  const sorter = searchParams.getAll("sort").reduce((acc, current) => {
-    const [propName, direction] = current.split(":") ?? [];
+  const sorter = sortParam.reduce((acc, currentSortType) => {
+    const [propName, direction] = splitParam(currentSortType);
 
-    if (propName && SortingType.Descending === Number(direction)) {
+    if (propName && SortingType.Descending === direction) {
       acc.push(`-${propName}`);
     }
     if (propName && !direction) {
@@ -96,7 +82,7 @@ export default function Index() {
     return acc;
   }, []);
 
-  const sortedPeople = [...people].sort(sortBy(...sorter));
+  const sortedPeople = [...peopleSeed].sort(sortBy(...sorter));
 
   return (
     <div className="max-w-6xl py-8 mx-auto lg:py-16 ">
@@ -117,25 +103,24 @@ export default function Index() {
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
-                      {tableColumn.map((column, index) => {
+                      {tableColumn.map(({id, label, property}, index) => {
                         const direction = getSortDirection(
-                          column.property,
+                          property,
                           sorter,
                         );
-
                         return (
                           <th
-                            key={index}
+                            key={id}
                             scope="col"
                             className="py-3.5 px-3 first:pl-4 text-left text-sm text-gray-900 first:sm:pl-6"
                           >
                             <button
                               onClick={() => {
-                                handleSort(column.property);
+                                handleSort(property);
                               }}
                               className="inline-flex font-semibold group"
                             >
-                              {column.label}
+                              {label}
                               <span
                                 className={`flex-none ml-2 rounded text-gray-400`}
                               >
